@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Séance Recorder</title>
+  <script src="https://unpkg.com/wavesurfer.js"></script>
+  <style>
+    #waveform {
+      width: 100%;
+      height: 100px;
+      background: #111;
+      margin-bottom: 1em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Record Your Message</h1>
+  <div id="waveform"></div>
+
+  <button id="startBtn">Start Recording</button>
+  <button id="stopBtn" disabled>Stop</button>
+  <button id="playBtn" disabled>Play Merged</button>
+
+  <script>
+    let mediaRecorder, audioChunks = [];
+    let uploadedFilename = '';
+
+    document.getElementById('startBtn').onclick = async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'audience.wav');
+
+        const res = await fetch('/upload', { method: 'POST', body: formData });
+        const data = await res.json();
+        uploadedFilename = data.filename;
+
+        document.getElementById('playBtn').disabled = false;
+        console.log('Uploaded as:', uploadedFilename);
+      };
+
+      mediaRecorder.start();
+      document.getElementById('startBtn').disabled = true;
+      document.getElementById('stopBtn').disabled = false;
+    };
+
+    document.getElementById('stopBtn').onclick = () => {
+      mediaRecorder.stop();
+      document.getElementById('stopBtn').disabled = true;
+    };
+
+    document.getElementById('playBtn').onclick = () => {
+      if (!uploadedFilename) return;
+      const wavesurfer = WaveSurfer.create({
+        container: '#waveform',
+        waveColor: 'lightgray',
+        progressColor: '#00ff88'
+      });
+
+      wavesurfer.load(`/audio/merged_${uploadedFilename}`);
+      wavesurfer.play();
+    };
+  </script>
+</body>
+</html>

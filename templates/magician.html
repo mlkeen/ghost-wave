@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Magician Control</title>
+</head>
+<body>
+  <h1>Insert Spirit Voice</h1>
+  <form id="insertForm">
+    <label>Filename of audience audio (e.g. <code>audience.wav</code>):</label><br>
+    <input type="text" id="filename" name="filename" required><br><br>
+
+    <label>Select a clip:</label><br>
+    <select id="clip" name="clip">
+      {% for clip in clips %}
+        <option value="{{ clip }}">{{ clip }}</option>
+      {% endfor %}
+    </select><br><br>
+
+    <button type="submit">Insert Clip</button>
+  </form>
+
+  <p id="result"></p>
+
+  <script>
+    document.getElementById('insertForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData();
+      formData.append('filename', document.getElementById('filename').value);
+      formData.append('clip', document.getElementById('clip').value);
+
+      const res = await fetch('/insert', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (data.status === 'ok') {
+        document.getElementById('result').innerText = 'Clip inserted successfully.';
+      } else {
+        document.getElementById('result').innerText = 'Error inserting clip.';
+      }
+    };
+  </script>
+</body>
+</html>

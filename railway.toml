@@ -1,8 +1,0 @@
-[build]
-builder = "paketobuildpacks/builder:full"
-
-[[build.buildpacks]]
-uri = "paketo-buildpacks/python"
-
-[[build.buildpacks]]
-uri = "paketo-buildpacks/apt"
